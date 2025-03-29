@@ -1,0 +1,165 @@
+[gd_scene load_steps=4 format=3 uid="uid://b1258n1kpye8h"]
+
+[ext_resource type="PackedScene" uid="uid://52advj25csr4" path="res://ui.tscn" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://ckomt6lcrb0bw" path="res://ball.tscn" id="2_0xm2m"]
+
+[sub_resource type="GDScript" id="GDScript_7dm0k"]
+script/source = "extends Node2D
+
+@onready var ui: CanvasLayer = $CanvasLayer
+@onready var camera: Camera2D = $Camera2D
+@onready var floor_texrure: ColorRect = $ParallaxBackground/ParallaxLayer/Node2D/ColorRect
+@onready var floor_layer: ParallaxLayer = $ParallaxBackground/ParallaxLayer
+@onready var ball: Node2D = $Ball
+
+var path: Dictionary = {\"vx\":[], \"vy\": [], \"x\": [0], \"y\": [0]}
+var prefix_def: Dictionary = {
+	\"C_w\": 0.71,
+	\"m\": 2.74,
+	\"A\": 0.0012566,
+	\"p_luft\": 1.289,
+}
+var D: float
+
+const delta_time: float = 0.001
+const gravity: float = 9.82
+var velosity0: float
+var angle0: float #in radians
+
+var previous_mouse_position: Vector2
+var play_prog: float = 0
+
+func _ready() -> void:
+	ui.visible = true
+	$ParallaxBackground.visible = true
+	
+	velosity0 = ui.velosity0
+	angle0 = ui.angle0
+	D = prefix_def[\"p_luft\"]*prefix_def[\"C_w\"]*prefix_def[\"A\"]/2
+	path[\"vx\"].append(velosity0 * cos(angle0))
+	path[\"vy\"].append(velosity0 * sin(angle0))
+	
+	_update_path()
+
+
+func _physics_process(delta: float) -> void:
+	# sets the progrss bar to the corret lenth
+	# witch after being set updates ther ball's pos automaticly
+	if(ui.playing):
+		play_prog += 1000.0*delta
+		
+		if(play_prog < len(path[\"x\"])):
+			ui.set_progress(play_prog/(len(path[\"x\"])-1)*100)
+		else:
+			ui.set_progress(100)
+			play_prog = 0
+			ui.playing = false
+
+
+func _process(_delta: float):
+	var current_mouse_position = get_viewport().get_mouse_position()
+	if(Input.is_action_pressed(\"mouse_right\")):
+		var mouse_movement = current_mouse_position - previous_mouse_position
+		camera.position -= mouse_movement / camera.zoom
+	previous_mouse_position = current_mouse_position
+	
+	var zoom_input = int(Input.is_action_just_pressed(\"mouse_down\")) - int(Input.is_action_just_pressed(\"mouse_up\"))
+	if zoom_input != 0:
+		var old_zoom = camera.zoom
+		camera.zoom += Vector2.ONE * (0.3 * zoom_input)
+		camera.zoom = camera.zoom.clamp(Vector2.ONE * 0.2, Vector2.ONE * 15)
+		
+		current_mouse_position = get_viewport().get_mouse_position()
+		camera.position += (current_mouse_position - Vector2(get_viewport().size)/2) * (Vector2.ONE/old_zoom - Vector2.ONE/camera.zoom)
+	
+	if camera.position.y > 0:
+		camera.position.y = 0
+	
+	floor_texrure.size = Vector2(get_viewport().size) / camera.zoom
+	floor_layer.motion_mirroring.x = floor_texrure.size.x
+
+
+
+func _new_prefix(index: int) -> void:
+	_update_path()
+
+
+func _edit_vel0(vel: float) -> void:
+	velosity0 = vel
+	_update_path()
+
+
+func _edit_angle0(angle: float) -> void:
+	angle0 = angle
+	_update_path()
+
+
+func _time_changed(progress: float) -> void:
+	var slice: float = (len(path[\"x\"])-1)/100.0*progress
+	ball.position.x = path[\"x\"][slice]*100
+	ball.position.y = -path[\"y\"][slice]*100
+	
+	play_prog = slice
+
+
+func _update_path(pfx_path = \"\"):
+	if pfx_path:
+		var prefix = FileAccess.open(pfx_path, FileAccess.READ)
+		# TODO: Load other prefixes if needed
+	
+	# Reset path with initial conditions
+	path = {\"vx\": [], \"vy\": [], \"x\": [0], \"y\": [0]}
+	path[\"vx\"].append(velosity0 * cos(angle0))
+	path[\"vy\"].append(velosity0 * sin(angle0))
+	
+	while path[\"y\"][len(path[\"y\"])-1] >= 0:
+		var last = len(path[\"x\"]) - 1  # Get last index
+		
+		var mass = prefix_def[\"m\"] * 0.001
+		
+		# Compute velocity magnitude
+		var v_mag = sqrt(pow(path[\"vx\"][last], 2) + pow(path[\"vy\"][last], 2))
+		
+		# Compute air resistance components
+		var ax = -D * v_mag * path[\"vx\"][last] / mass
+		var ay = -gravity - (D * v_mag * path[\"vy\"][last] / mass)
+		
+		# Update velocities
+		var new_vx = path[\"vx\"][last] + ax * delta_time
+		var new_vy = path[\"vy\"][last] + ay * delta_time
+		
+		# Update positions
+		var new_x = path[\"x\"][last] + path[\"vx\"][last] * delta_time
+		var new_y = path[\"y\"][last] + path[\"vy\"][last] * delta_time
+		
+		# Append new values to path
+		path[\"x\"].append(new_x)
+		path[\"y\"].append(new_y)
+		path[\"vx\"].append(new_vx)
+		path[\"vy\"].append(new_vy)
+"
+
+[node name="main" type="Node2D"]
+script = SubResource("GDScript_7dm0k")
+
+[node name="CanvasLayer" parent="." instance=ExtResource("1_ig7tw")]
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="."]
+
+[node name="ParallaxLayer" type="ParallaxLayer" parent="ParallaxBackground"]
+
+[node name="Node2D" type="Node2D" parent="ParallaxBackground/ParallaxLayer"]
+
+[node name="ColorRect" type="ColorRect" parent="ParallaxBackground/ParallaxLayer/Node2D"]
+offset_top = 8.0
+offset_right = 1.0
+offset_bottom = 9.0
+color = Color(0.293192, 0.631032, 0.0277666, 1)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+
+[node name="Ball" parent="." instance=ExtResource("2_0xm2m")]
+
+[connection signal="angle0_change" from="CanvasLayer" to="." method="_edit_angle0"]
+[connection signal="time_changed" from="CanvasLayer" to="." method="_time_changed"]
+[connection signal="velocity0_change" from="CanvasLayer" to="." method="_edit_vel0"]

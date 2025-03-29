@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3 uid="uid://ckomt6lcrb0bw"]
+
+[ext_resource type="Texture2D" uid="uid://63yqofearbuu" path="res://ball.png" id="1_x8fbi"]
+
+[sub_resource type="GDScript" id="GDScript_x8fbi"]
+script/source = "extends Node2D
+
+var vx: float
+var vy: float
+var f_vind_y: float
+var f_find_x: float
+"
+
+[node name="Ball" type="Node2D"]
+script = SubResource("GDScript_x8fbi")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 8.0
+texture = ExtResource("1_x8fbi")
+expand_mode = 3

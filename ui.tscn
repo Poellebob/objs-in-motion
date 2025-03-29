@@ -1,0 +1,141 @@
+[gd_scene load_steps=2 format=3 uid="uid://52advj25csr4"]
+
+[sub_resource type="GDScript" id="GDScript_xb563"]
+script/source = "extends CanvasLayer
+
+@onready var velosity0_text: LineEdit = $Control/VBoxContainer/HBoxContainer/LineEdit
+@onready var angle0_text: LineEdit = $Control/VBoxContainer/HBoxContainer/LineEdit2
+@onready var h_slider: HSlider = $Control/VBoxContainer/HBoxContainer/HSlider
+
+var velosity0: float
+var angle0: float
+
+signal time_changed(progress: float)
+signal angle0_change(a0: float)
+signal velocity0_change(v0: float)
+
+var playing: bool = false
+
+func  _ready() -> void:
+	if(float(velosity0_text.text)):
+		velosity0 = float(velosity0_text.text)
+	if(float(angle0_text.text)):
+		angle0 = deg_to_rad(float(angle0_text.text))
+
+
+func _process(_delta: float) -> void:
+	if(Input.is_action_just_pressed(\"space\")):
+		playing = not playing
+
+
+func _on_h_slider_value_changed(value: float) -> void:
+	time_changed.emit(h_slider.value)
+
+
+func _on_velocity_edit_focus_exited() -> void:
+	if(float(velosity0_text.text)):
+		if(velosity0 == float(velosity0_text.text)):
+			_v0_submitted(velosity0_text.text)
+
+
+func _v0_submitted(new_text: String) -> void:
+	if(float(new_text)):
+		velosity0 = float(new_text)
+	else:
+		return
+	velocity0_change.emit(velosity0)
+
+
+func _on_angle_edit_focus_exited() -> void:
+	if(float(angle0_text.text)):
+		if (angle0 == deg_to_rad(float(angle0_text.text))):
+			_a0_submitted(angle0_text.text)
+
+
+func _a0_submitted(new_text: String) -> void:
+	if(float(new_text)):
+		angle0 = deg_to_rad(float(new_text))
+	else:
+		return
+	angle0_change.emit(angle0)
+
+
+func _on_stop_pressed() -> void:
+	playing = false
+
+
+func _on_play_pressed() -> void:
+	playing = true
+
+
+func set_progress(progress: float):
+	h_slider.value = progress
+"
+
+[node name="CanvasLayer" type="CanvasLayer"]
+script = SubResource("GDScript_xb563")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Control" type="Control" parent="Control/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Control/VBoxContainer"]
+layout_mode = 2
+
+[node name="Play" type="Button" parent="Control/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = ""
+
+[node name="Stop" type="Button" parent="Control/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "󰝤"
+
+[node name="HSlider" type="HSlider" parent="Control/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+step = 0.01
+value = 1.0
+
+[node name="Label" type="Label" parent="Control/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "v="
+
+[node name="LineEdit" type="LineEdit" parent="Control/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "200"
+
+[node name="Label2" type="Label" parent="Control/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "a="
+
+[node name="LineEdit2" type="LineEdit" parent="Control/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "25"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="Control/VBoxContainer"]
+layout_mode = 2
+
+[connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/Play" to="." method="_on_play_pressed"]
+[connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/Stop" to="." method="_on_stop_pressed"]
+[connection signal="value_changed" from="Control/VBoxContainer/HBoxContainer/HSlider" to="." method="_on_h_slider_value_changed"]
+[connection signal="focus_exited" from="Control/VBoxContainer/HBoxContainer/LineEdit" to="." method="_on_velocity_edit_focus_exited"]
+[connection signal="text_submitted" from="Control/VBoxContainer/HBoxContainer/LineEdit" to="." method="_v0_submitted"]
+[connection signal="focus_exited" from="Control/VBoxContainer/HBoxContainer/LineEdit2" to="." method="_on_angle_edit_focus_exited"]
+[connection signal="text_submitted" from="Control/VBoxContainer/HBoxContainer/LineEdit2" to="." method="_a0_submitted"]
