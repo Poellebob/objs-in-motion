@@ -1,13 +1,14 @@
-[gd_scene load_steps=4 format=3 uid="uid://b1258n1kpye8h"]
+[gd_scene load_steps=5 format=3 uid="uid://b1258n1kpye8h"]
 
 [ext_resource type="PackedScene" uid="uid://52advj25csr4" path="res://ui.tscn" id="1_ig7tw"]
 [ext_resource type="PackedScene" uid="uid://ckomt6lcrb0bw" path="res://ball.tscn" id="2_0xm2m"]
+[ext_resource type="PackedScene" uid="uid://dfwqtl62dpqh7" path="res://axis_display.tscn" id="2_h2yge"]
 
 [sub_resource type="GDScript" id="GDScript_7dm0k"]
 script/source = "extends Node2D
 
 @onready var ui: CanvasLayer = $CanvasLayer
-@onready var camera: Camera2D = $Camera2D
+@onready var camera: Camera2D = $\"Axis display/Camera2D\"
 @onready var floor_texrure: ColorRect = $ParallaxBackground/ParallaxLayer/Node2D/ColorRect
 @onready var floor_layer: ParallaxLayer = $ParallaxBackground/ParallaxLayer
 @onready var ball: Node2D = $Ball
@@ -143,8 +144,10 @@ func _update_path(pfx_path = \"\"):
 script = SubResource("GDScript_7dm0k")
 
 [node name="CanvasLayer" parent="." instance=ExtResource("1_ig7tw")]
+visible = false
 
 [node name="ParallaxBackground" type="ParallaxBackground" parent="."]
+visible = false
 
 [node name="ParallaxLayer" type="ParallaxLayer" parent="ParallaxBackground"]
 
@@ -156,7 +159,9 @@ offset_right = 1.0
 offset_bottom = 9.0
 color = Color(0.293192, 0.631032, 0.0277666, 1)
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="Axis display" parent="." instance=ExtResource("2_h2yge")]
+
+[node name="Camera2D" type="Camera2D" parent="Axis display"]
 
 [node name="Ball" parent="." instance=ExtResource("2_0xm2m")]
 

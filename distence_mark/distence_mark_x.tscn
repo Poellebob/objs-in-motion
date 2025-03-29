@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://bdrkmkyqf5ywc"]
+
+[node name="Distence mark x" type="Node2D"]
+
+[node name="Label" type="Label" parent="."]
+offset_right = 48.0
+offset_bottom = 24.0
+text = "0000"
+horizontal_alignment = 1
+
+[node name="Label2" type="Label" parent="."]
+offset_left = -8.0
+offset_right = 8.0
+offset_bottom = 24.0
+text = "|"
+horizontal_alignment = 1

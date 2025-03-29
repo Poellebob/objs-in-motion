@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3 uid="uid://dfwqtl62dpqh7"]
+
+[sub_resource type="GDScript" id="GDScript_xocbd"]
+script/source = "extends Node2D
+
+var camera: Camera2D
+
+func _ready() -> void:
+	for child in get_children():
+		if child is Camera2D:
+			camera = child
+			break
+	
+"
+
+[node name="Axis display" type="Node2D"]
+script = SubResource("GDScript_xocbd")
