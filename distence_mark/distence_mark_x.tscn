@@ -1,6 +1,9 @@
-[gd_scene format=3 uid="uid://bdrkmkyqf5ywc"]
+[gd_scene load_steps=2 format=3 uid="uid://bdrkmkyqf5ywc"]
 
-[node name="Distence mark x" type="Node2D"]
+[ext_resource type="Script" uid="uid://bhgt6g2hwld3c" path="res://distence_mark/distence_mark.gd" id="1_etrdh"]
+
+[node name="DistenceMarkX" type="Node2D"]
+script = ExtResource("1_etrdh")
 
 [node name="Label" type="Label" parent="."]
 offset_right = 48.0

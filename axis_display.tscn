@@ -5,13 +5,21 @@ script/source = "extends Node2D
 
 var camera: Camera2D
 
+const DISTENCE_MARK_X: Resource = preload(\"res://distence_mark/distence_mark_x.tscn\")
+const DISTENCE_MARK_Y: Resource = preload(\"res://distence_mark/distence_mark_y.tscn\")
+
 func _ready() -> void:
 	for child in get_children():
 		if child is Camera2D:
 			camera = child
 			break
 	
+	
 "
 
 [node name="Axis display" type="Node2D"]
 script = SubResource("GDScript_xocbd")
+
+[node name="X" type="Node2D" parent="."]
+
+[node name="Y" type="Node2D" parent="."]

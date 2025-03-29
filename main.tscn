@@ -12,6 +12,7 @@ script/source = "extends Node2D
 @onready var floor_texrure: ColorRect = $ParallaxBackground/ParallaxLayer/Node2D/ColorRect
 @onready var floor_layer: ParallaxLayer = $ParallaxBackground/ParallaxLayer
 @onready var ball: Node2D = $Ball
+@onready var path_line: Line2D = $Line2D
 
 var path: Dictionary = {\"vx\":[], \"vy\": [], \"x\": [0], \"y\": [0]}
 var prefix_def: Dictionary = {
@@ -26,6 +27,8 @@ const delta_time: float = 0.001
 const gravity: float = 9.82
 var velosity0: float
 var angle0: float #in radians
+var x0: float
+var y0: float
 
 var previous_mouse_position: Vector2
 var play_prog: float = 0
@@ -59,12 +62,12 @@ func _physics_process(delta: float) -> void:
 
 func _process(_delta: float):
 	var current_mouse_position = get_viewport().get_mouse_position()
-	if(Input.is_action_pressed(\"mouse_right\")):
+	if(Input.is_action_pressed(\"mouse_left\") and ui.controll_free):
 		var mouse_movement = current_mouse_position - previous_mouse_position
 		camera.position -= mouse_movement / camera.zoom
 	previous_mouse_position = current_mouse_position
 	
-	var zoom_input = int(Input.is_action_just_pressed(\"mouse_down\")) - int(Input.is_action_just_pressed(\"mouse_up\"))
+	var zoom_input = int(Input.is_action_just_pressed(\"mouse_up\")) - int(Input.is_action_just_pressed(\"mouse_down\"))
 	if zoom_input != 0:
 		var old_zoom = camera.zoom
 		camera.zoom += Vector2.ONE * (0.3 * zoom_input)
@@ -83,16 +86,31 @@ func _process(_delta: float):
 
 func _new_prefix(index: int) -> void:
 	_update_path()
+	_time_changed(0)
 
 
 func _edit_vel0(vel: float) -> void:
 	velosity0 = vel
 	_update_path()
+	_time_changed(0)
 
 
 func _edit_angle0(angle: float) -> void:
 	angle0 = angle
 	_update_path()
+	_time_changed(0)
+
+
+func _edit_x0(x: float) -> void:
+	x0 = x
+	_update_path()
+	_time_changed(0)
+
+
+func _edit_y0(y: float) -> void:
+	y0 = y
+	_update_path()
+	_time_changed(0)
 
 
 func _time_changed(progress: float) -> void:
@@ -100,20 +118,34 @@ func _time_changed(progress: float) -> void:
 	ball.position.x = path[\"x\"][slice]*100
 	ball.position.y = -path[\"y\"][slice]*100
 	
+	ui.set_ball_display(
+		snapped(path[\"x\"][slice], 0.1), 
+		snapped(-path[\"y\"][slice], 0.1), 
+		snapped(path[\"vx\"][slice], 0.1), 
+		snapped(-path[\"vy\"][slice], 0.1)
+	)
+	
 	play_prog = slice
 
 
 func _update_path(pfx_path = \"\"):
+	path_line.clear_points()
+	
 	if pfx_path:
 		var prefix = FileAccess.open(pfx_path, FileAccess.READ)
 		# TODO: Load other prefixes if needed
 	
 	# Reset path with initial conditions
-	path = {\"vx\": [], \"vy\": [], \"x\": [0], \"y\": [0]}
+	path = {\"vx\": [], \"vy\": [], \"x\": [], \"y\": []}
+	
+	# Set initial values using x0 and y0
 	path[\"vx\"].append(velosity0 * cos(angle0))
 	path[\"vy\"].append(velosity0 * sin(angle0))
+	path[\"x\"].append(x0)  # Use x0 instead of 0
+	path[\"y\"].append(y0)  # Use y0 instead of 0
+	path_line.add_point(Vector2(x0*100, -y0*100))
 	
-	while path[\"y\"][len(path[\"y\"])-1] >= 0:
+	while path[\"y\"][-1] >= 0:
 		var last = len(path[\"x\"]) - 1  # Get last index
 		
 		var mass = prefix_def[\"m\"] * 0.001
@@ -138,6 +170,7 @@ func _update_path(pfx_path = \"\"):
 		path[\"y\"].append(new_y)
 		path[\"vx\"].append(new_vx)
 		path[\"vy\"].append(new_vy)
+		path_line.add_point(Vector2(new_x*100, -new_y*100))
 "
 
 [node name="main" type="Node2D"]
@@ -163,8 +196,14 @@ color = Color(0.293192, 0.631032, 0.0277666, 1)
 
 [node name="Camera2D" type="Camera2D" parent="Axis display"]
 
+[node name="Line2D" type="Line2D" parent="."]
+width = 2.75
+default_color = Color(0.910236, 0, 0.107668, 1)
+
 [node name="Ball" parent="." instance=ExtResource("2_0xm2m")]
 
 [connection signal="angle0_change" from="CanvasLayer" to="." method="_edit_angle0"]
 [connection signal="time_changed" from="CanvasLayer" to="." method="_time_changed"]
 [connection signal="velocity0_change" from="CanvasLayer" to="." method="_edit_vel0"]
+[connection signal="x0_change" from="CanvasLayer" to="." method="_edit_x0"]
+[connection signal="y0_change" from="CanvasLayer" to="." method="_edit_y0"]
