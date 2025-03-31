@@ -9,7 +9,7 @@ script/source = "extends Node2D
 
 @onready var ui: CanvasLayer = $CanvasLayer
 @onready var camera: Camera2D = $\"Axis display/Camera2D\"
-@onready var floor_texrure: ColorRect = $ParallaxBackground/ParallaxLayer/Node2D/ColorRect
+@onready var floor_texture: ColorRect = $ParallaxBackground/ParallaxLayer/Node2D/ColorRect
 @onready var floor_layer: ParallaxLayer = $ParallaxBackground/ParallaxLayer
 @onready var ball: Node2D = $Ball
 @onready var path_line: Line2D = $Line2D
@@ -21,6 +21,7 @@ var prefix_def: Dictionary = {
 	\"A\": 0.0012566,
 	\"p_luft\": 1.289,
 }
+var prefix: Dictionary
 var D: float
 
 const delta_time: float = 0.001
@@ -39,7 +40,9 @@ func _ready() -> void:
 	
 	velosity0 = ui.velosity0
 	angle0 = ui.angle0
-	D = prefix_def[\"p_luft\"]*prefix_def[\"C_w\"]*prefix_def[\"A\"]/2
+	
+	prefix = prefix_def
+	D = prefix[\"p_luft\"]*prefix[\"C_w\"]*prefix[\"A\"]/2
 	path[\"vx\"].append(velosity0 * cos(angle0))
 	path[\"vy\"].append(velosity0 * sin(angle0))
 	
@@ -67,20 +70,23 @@ func _process(_delta: float):
 		camera.position -= mouse_movement / camera.zoom
 	previous_mouse_position = current_mouse_position
 	
+	#TODO zoom to mouse
 	var zoom_input = int(Input.is_action_just_pressed(\"mouse_up\")) - int(Input.is_action_just_pressed(\"mouse_down\"))
 	if zoom_input != 0:
-		var old_zoom = camera.zoom
-		camera.zoom += Vector2.ONE * (0.3 * zoom_input)
+	#	var old_zoom = camera.zoom
+		camera.zoom += Vector2.ONE * 0.1 * zoom_input
 		camera.zoom = camera.zoom.clamp(Vector2.ONE * 0.2, Vector2.ONE * 15)
-		
-		current_mouse_position = get_viewport().get_mouse_position()
-		camera.position += (current_mouse_position - Vector2(get_viewport().size)/2) * (Vector2.ONE/old_zoom - Vector2.ONE/camera.zoom)
+	#	
+	#	current_mouse_position = get_viewport().get_mouse_position()
+	#	var zoom_factor = (Vector2.ONE / old_zoom) - (Vector2.ONE / camera.zoom)
+	#	camera.position += (current_mouse_position - Vector2(get_viewport().size) / 2 + camera.position) / camera.zoom * zoom_factor
 	
 	if camera.position.y > 0:
 		camera.position.y = 0
 	
-	floor_texrure.size = Vector2(get_viewport().size) / camera.zoom
-	floor_layer.motion_mirroring.x = floor_texrure.size.x
+	floor_texture.size = Vector2(get_viewport().size) / camera.zoom
+	floor_layer.motion_mirroring.x = floor_texture.size.x
+
 
 
 
@@ -148,7 +154,7 @@ func _update_path(pfx_path = \"\"):
 	while path[\"y\"][-1] >= 0:
 		var last = len(path[\"x\"]) - 1  # Get last index
 		
-		var mass = prefix_def[\"m\"] * 0.001
+		var mass = prefix[\"m\"] / 1000
 		
 		# Compute velocity magnitude
 		var v_mag = sqrt(pow(path[\"vx\"][last], 2) + pow(path[\"vy\"][last], 2))
