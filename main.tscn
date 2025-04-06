@@ -30,6 +30,7 @@ var velosity0: float
 var angle0: float #in radians
 var x0: float
 var y0: float
+var endx : float
 
 var previous_mouse_position: Vector2
 var play_prog: float = 0
@@ -91,32 +92,39 @@ func _process(_delta: float):
 
 
 func _new_prefix(index: int) -> void:
-	_update_path()
+	_update_path(\"\", ui.input_type)
 	_time_changed(0)
 
 
 func _edit_vel0(vel: float) -> void:
 	velosity0 = vel
-	_update_path()
+	_update_path(\"\", ui.input_type)
 	_time_changed(0)
 
 
 func _edit_angle0(angle: float) -> void:
 	angle0 = angle
-	_update_path()
+	_update_path(\"\", ui.input_type)
 	_time_changed(0)
 
 
 func _edit_x0(x: float) -> void:
 	x0 = x
-	_update_path()
+	_update_path(\"\", ui.input_type)
 	_time_changed(0)
 
 
 func _edit_y0(y: float) -> void:
 	y0 = y
-	_update_path()
+	_update_path(\"\", ui.input_type)
 	_time_changed(0)
+
+
+func _edit_xend(xend: float) -> void:
+	endx = xend
+	_update_path(\"\", ui.input_type)
+	_time_changed(0)
+
 
 
 func _time_changed(progress: float) -> void:
@@ -126,15 +134,19 @@ func _time_changed(progress: float) -> void:
 	
 	ui.set_ball_display(
 		snapped(path[\"x\"][slice], 0.1), 
-		snapped(-path[\"y\"][slice], 0.1), 
+		snapped(path[\"y\"][slice], 0.1), 
 		snapped(path[\"vx\"][slice], 0.1), 
-		snapped(-path[\"vy\"][slice], 0.1)
+		snapped(path[\"vy\"][slice], 0.1)
 	)
 	
 	play_prog = slice
 
 
-func _update_path(pfx_path = \"\"):
+func _update_path(pfx_path = \"\", mode: int = 0):
+	if mode == 1:
+		_end_point_cal()
+		return
+	
 	path_line.clear_points()
 	
 	if pfx_path:
@@ -177,6 +189,38 @@ func _update_path(pfx_path = \"\"):
 		path[\"vx\"].append(new_vx)
 		path[\"vy\"].append(new_vy)
 		path_line.add_point(Vector2(new_x*100, -new_y*100))
+
+
+func _end_point_cal():
+	var v_min: float = 0.0
+	var v_max: float = 54.1666667 # based on a google search
+	var tolerance: float = 0.005
+	
+	velosity0 = v_max
+	_update_path()
+	
+	ui.info_lable.text = \"the ball can not fly longer then \" + str(path[\"x\"][len(path[\"x\"]) - 1]) + \"m\"
+	var searching = true
+	if endx > path[\"x\"][len(path[\"x\"]) - 1]:
+		searching = false
+	
+	while searching:
+		var v_mid = (v_min + v_max) / 2.0
+		velosity0 = v_mid
+		_update_path()  # Uses global variables like velosity0, angle0, x0, y0
+		
+		var last = path[\"x\"].size() - 1
+		var final_x = path[\"x\"][last]
+		var error = abs(final_x - endx)
+		
+		if error <= tolerance:
+			print(\"Found velocity: \", v_mid, \" with error: \", error)
+			searching = false
+			return
+		elif final_x < endx:
+			v_min = v_mid
+		else:
+			v_max = v_mid
 "
 
 [node name="main" type="Node2D"]
@@ -201,6 +245,7 @@ color = Color(0.293192, 0.631032, 0.0277666, 1)
 [node name="Axis display" parent="." instance=ExtResource("2_h2yge")]
 
 [node name="Camera2D" type="Camera2D" parent="Axis display"]
+position = Vector2(225, 0)
 
 [node name="Line2D" type="Line2D" parent="."]
 width = 2.75
@@ -212,4 +257,5 @@ default_color = Color(0.910236, 0, 0.107668, 1)
 [connection signal="time_changed" from="CanvasLayer" to="." method="_time_changed"]
 [connection signal="velocity0_change" from="CanvasLayer" to="." method="_edit_vel0"]
 [connection signal="x0_change" from="CanvasLayer" to="." method="_edit_x0"]
+[connection signal="xend_change" from="CanvasLayer" to="." method="_edit_xend"]
 [connection signal="y0_change" from="CanvasLayer" to="." method="_edit_y0"]

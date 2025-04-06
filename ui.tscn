@@ -1,21 +1,23 @@
 [gd_scene load_steps=3 format=3 uid="uid://52advj25csr4"]
 
-[ext_resource type="FontFile" uid="uid://dmdsaedej3dpc" path="res://fonts/CommitMonoNerdFont-Regular.otf" id="1_fyqef"]
+[ext_resource type="FontFile" uid="uid://bpedw4gcly2jk" path="res://fonts/CommitMonoNerdFontMono-Bold.otf" id="1_fyqef"]
 
 [sub_resource type="GDScript" id="GDScript_xb563"]
 script/source = "extends CanvasLayer
 
-@onready var velosity0_text: LineEdit = $Control/VBoxContainer/HBoxContainer/LineEdit
-@onready var angle0_text: LineEdit = $Control/VBoxContainer/HBoxContainer/LineEdit2
-@onready var h_slider: HSlider = $Control/VBoxContainer/HBoxContainer/HSlider
-@onready var xin_text: LineEdit = $Control/VBoxContainer/HBoxContainer2/LineEdit
-@onready var yin_text: LineEdit = $Control/VBoxContainer/HBoxContainer2/LineEdit2
+@onready var velosity0_text: LineEdit = $Control/VBoxContainer/HBoxContainer/VBoxContainer2/HBoxContainer2/LineEdit
+@onready var angle0_text: LineEdit = $Control/VBoxContainer/HBoxContainer/VBoxContainer3/HBoxContainer/LineEdit
+@onready var h_slider: HSlider = $Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer/HSlider
+@onready var xin_text: LineEdit = $Control/VBoxContainer/HBoxContainer/VBoxContainer2/HBoxContainer/LineEdit
+@onready var yin_text: LineEdit = $Control/VBoxContainer/HBoxContainer/VBoxContainer3/HBoxContainer2/LineEdit
 @onready var A_text: LineEdit = $Control/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer/LineEdit
 @onready var C_w_text: LineEdit = $Control/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer2/LineEdit
 @onready var m_text: LineEdit = $Control/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer3/LineEdit
 @onready var p_luft_text: LineEdit = $Control/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer4/LineEdit
 @onready var save: Button = $Control/VBoxContainer/Control/HBoxContainer/VBoxContainer/Save
 @onready var load: Button = $Control/VBoxContainer/Control/HBoxContainer/VBoxContainer/Load
+@onready var mode_switch: MenuButton = $Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2/MenuButton
+@onready var info_lable: Label = $Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2/Label5
 
 var velosity0: float
 var angle0: float
@@ -28,6 +30,7 @@ var C_w
 var m
 var p_luft
 var input_type: int
+var xend: float
 
 signal time_changed(progress: float)
 signal angle0_change(a0: float)
@@ -38,6 +41,7 @@ signal A_change(A: float)
 signal C_w_change(C_w: float)
 signal m_change(m: float)
 signal p_lift_change(p_lift: float)
+signal xend_change(xend: float)
 
 var playing: bool = false
 var controll_free: bool = true
@@ -47,6 +51,8 @@ func  _ready() -> void:
 		velosity0 = float(velosity0_text.text)
 	if(float(angle0_text.text)):
 		angle0 = deg_to_rad(float(angle0_text.text))
+	
+	mode_switch.get_popup().connect(\"id_pressed\", _on_mode_switch_id_pressed)
 
 
 func _process(_delta: float) -> void:
@@ -74,8 +80,12 @@ func _on_velocity_edit_focus_exited() -> void:
 
 func _v0_submitted(new_text: String) -> void:
 	if new_text.is_valid_float():
-		velosity0 = float(new_text)
-		velocity0_change.emit(velosity0)
+		if input_type == 0:
+			velosity0 = float(new_text)
+			velocity0_change.emit(velosity0)
+		if input_type == 1:
+			xend = float(new_text)
+			xend_change.emit(xend)
 
 
 func _on_angle_edit_focus_exited() -> void:
@@ -93,7 +103,7 @@ func _a0_submitted(new_text: String) -> void:
 func _xin_submitted(new_text: String) -> void:
 	if new_text.is_valid_float():
 		xin_old = float(new_text)
-		x0_change.emit(x0)
+		x0_change.emit(xin_old)
 
 
 func _on_xin_edit_focus_exited() -> void:
@@ -175,10 +185,28 @@ func set_progress(progress: float):
 
 
 func set_ball_display(x:float,y:float,vx:float,vy:float):
-	$Control/VBoxContainer/HBoxContainer2/x.text = str(x)
-	$Control/VBoxContainer/HBoxContainer2/y.text = str(y)
-	$Control/VBoxContainer/HBoxContainer2/vx.text = str(vx)
-	$Control/VBoxContainer/HBoxContainer2/vy.text = str(vy)
+	$Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2/x.text = str(x)
+	$Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2/y.text = str(y)
+	$Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2/vx.text = str(vx)
+	$Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2/vy.text = str(vy)
+
+
+func _on_mode_switch_id_pressed(id: int) -> void:
+	match id:
+		0:
+			input_type = id
+			$Control/VBoxContainer/HBoxContainer/VBoxContainer2/HBoxContainer2/Label.text = \"v0[m/s]= \"
+			$Control/VBoxContainer/HBoxContainer/VBoxContainer2/HBoxContainer/Label.text = \"x0[m]= \"
+			$Control/VBoxContainer/HBoxContainer/VBoxContainer3/HBoxContainer/Label.text = \"a0= \"
+			$Control/VBoxContainer/HBoxContainer/VBoxContainer3/HBoxContainer2/Label.text = \"y0[m]= \"
+			velocity0_change.emit(velosity0)
+		1:
+			input_type = id
+			$Control/VBoxContainer/HBoxContainer/VBoxContainer2/HBoxContainer2/Label.text = \"xend[m]= \"
+			$Control/VBoxContainer/HBoxContainer/VBoxContainer2/HBoxContainer/Label.text = \"x0[m]= \"
+			$Control/VBoxContainer/HBoxContainer/VBoxContainer3/HBoxContainer/Label.text = \"a0= \"
+			$Control/VBoxContainer/HBoxContainer/VBoxContainer3/HBoxContainer2/Label.text = \"y0[m]= \"
+			xend_change.emit(xend)
 "
 
 [node name="CanvasLayer" type="CanvasLayer"]
@@ -217,6 +245,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Control/VBoxContainer/Control/HBoxContainer"]
+visible = false
 layout_mode = 2
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Control/VBoxContainer/Control/HBoxContainer/VBoxContainer"]
@@ -286,92 +315,144 @@ text = "load"
 [node name="HBoxContainer" type="HBoxContainer" parent="Control/VBoxContainer"]
 layout_mode = 2
 
-[node name="Play" type="Button" parent="Control/VBoxContainer/HBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="play" type="Button" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 focus_mode = 0
 theme_override_fonts/font = ExtResource("1_fyqef")
 text = ""
 
-[node name="Stop" type="Button" parent="Control/VBoxContainer/HBoxContainer"]
+[node name="stop" type="Button" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
+focus_mode = 0
 theme_override_fonts/font = ExtResource("1_fyqef")
-text = "󰝤"
+text = ""
 
-[node name="HSlider" type="HSlider" parent="Control/VBoxContainer/HBoxContainer"]
+[node name="HSlider" type="HSlider" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 1
-focus_mode = 1
-step = 0.01
+size_flags_vertical = 3
+step = 0.1
 
-[node name="Label" type="Label" parent="Control/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-text = "v0[m/s²]="
-
-[node name="LineEdit" type="LineEdit" parent="Control/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-text = "200"
-
-[node name="Label2" type="Label" parent="Control/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-text = "a0[degree]="
-
-[node name="LineEdit2" type="LineEdit" parent="Control/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-text = "25"
-
-[node name="HBoxContainer2" type="HBoxContainer" parent="Control/VBoxContainer"]
+[node name="HBoxContainer2" type="HBoxContainer" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="Label3" type="Label" parent="Control/VBoxContainer/HBoxContainer2"]
+[node name="Label" type="Label" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2"]
 layout_mode = 2
-text = "x="
+text = "x[m]= "
 
-[node name="x" type="Label" parent="Control/VBoxContainer/HBoxContainer2"]
-layout_mode = 2
-
-[node name="Label4" type="Label" parent="Control/VBoxContainer/HBoxContainer2"]
-layout_mode = 2
-text = "y="
-
-[node name="y" type="Label" parent="Control/VBoxContainer/HBoxContainer2"]
+[node name="x" type="Label" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2"]
 layout_mode = 2
 
-[node name="Label5" type="Label" parent="Control/VBoxContainer/HBoxContainer2"]
+[node name="Label2" type="Label" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2"]
 layout_mode = 2
-text = "vx="
+text = "y[m]= "
 
-[node name="vx" type="Label" parent="Control/VBoxContainer/HBoxContainer2"]
-layout_mode = 2
-
-[node name="Label6" type="Label" parent="Control/VBoxContainer/HBoxContainer2"]
-layout_mode = 2
-text = "vy="
-
-[node name="vy" type="Label" parent="Control/VBoxContainer/HBoxContainer2"]
+[node name="y" type="Label" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2"]
 layout_mode = 2
 
-[node name="Control" type="Control" parent="Control/VBoxContainer/HBoxContainer2"]
+[node name="Label3" type="Label" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+text = "vx[m/s]= "
+
+[node name="vx" type="Label" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+
+[node name="Label4" type="Label" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+text = "vy[m/s]= "
+
+[node name="vy" type="Label" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+
+[node name="Control" type="Control" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Label" type="Label" parent="Control/VBoxContainer/HBoxContainer2"]
+[node name="Label5" type="Label" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2"]
 layout_mode = 2
-text = "x0[m]="
+theme_override_colors/font_color = Color(0.753511, 0, 0.00318683, 1)
 
-[node name="LineEdit" type="LineEdit" parent="Control/VBoxContainer/HBoxContainer2"]
+[node name="MenuButton" type="MenuButton" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+text = "Chose Mode"
+flat = false
+item_count = 2
+popup/item_0/text = "Start mode"
+popup/item_0/id = 0
+popup/item_1/text = "End mode"
+popup/item_1/id = 1
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="Control/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer2"]
+layout_mode = 2
+
+[node name="Control" type="Control" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer2/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer2/HBoxContainer2"]
+layout_mode = 2
+text = "v0[m/s]= "
+
+[node name="LineEdit" type="LineEdit" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer2/HBoxContainer2"]
+layout_mode = 2
+text = "20"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer2"]
+layout_mode = 2
+
+[node name="Control" type="Control" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer2/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer2/HBoxContainer"]
+layout_mode = 2
+text = "x0[m]= "
+
+[node name="LineEdit" type="LineEdit" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer2/HBoxContainer"]
 layout_mode = 2
 text = "0"
 
-[node name="Control2" type="Control" parent="Control/VBoxContainer/HBoxContainer2"]
-custom_minimum_size = Vector2(31.97, 0)
+[node name="VBoxContainer3" type="VBoxContainer" parent="Control/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 
-[node name="Label2" type="Label" parent="Control/VBoxContainer/HBoxContainer2"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer3"]
 layout_mode = 2
-text = " y0[m]="
 
-[node name="LineEdit2" type="LineEdit" parent="Control/VBoxContainer/HBoxContainer2"]
+[node name="Control" type="Control" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer3/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer3/HBoxContainer"]
+layout_mode = 2
+text = "a0= "
+
+[node name="LineEdit" type="LineEdit" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer3/HBoxContainer"]
+layout_mode = 2
+text = "20"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer3"]
+layout_mode = 2
+
+[node name="Control" type="Control" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer3/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer3/HBoxContainer2"]
+layout_mode = 2
+text = "y0[m]= "
+
+[node name="LineEdit" type="LineEdit" parent="Control/VBoxContainer/HBoxContainer/VBoxContainer3/HBoxContainer2"]
 layout_mode = 2
 text = "0"
 
@@ -383,16 +464,16 @@ text = "0"
 [connection signal="text_submitted" from="Control/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer3/LineEdit" to="." method="_m_submitted"]
 [connection signal="focus_exited" from="Control/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer4/LineEdit" to="." method="_on_p_lift_edit_focus_exited"]
 [connection signal="text_submitted" from="Control/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer4/LineEdit" to="." method="_p_lift_submitted"]
-[connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/Play" to="." method="_on_play_pressed"]
-[connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/Stop" to="." method="_on_stop_pressed"]
-[connection signal="drag_ended" from="Control/VBoxContainer/HBoxContainer/HSlider" to="." method="_on_h_slider_drag_ended"]
-[connection signal="drag_started" from="Control/VBoxContainer/HBoxContainer/HSlider" to="." method="_on_h_slider_drag_started"]
-[connection signal="value_changed" from="Control/VBoxContainer/HBoxContainer/HSlider" to="." method="_on_h_slider_value_changed"]
-[connection signal="focus_exited" from="Control/VBoxContainer/HBoxContainer/LineEdit" to="." method="_on_velocity_edit_focus_exited"]
-[connection signal="text_submitted" from="Control/VBoxContainer/HBoxContainer/LineEdit" to="." method="_v0_submitted"]
-[connection signal="focus_exited" from="Control/VBoxContainer/HBoxContainer/LineEdit2" to="." method="_on_angle_edit_focus_exited"]
-[connection signal="text_submitted" from="Control/VBoxContainer/HBoxContainer/LineEdit2" to="." method="_a0_submitted"]
-[connection signal="focus_exited" from="Control/VBoxContainer/HBoxContainer2/LineEdit" to="." method="_on_xin_edit_focus_exited"]
-[connection signal="text_submitted" from="Control/VBoxContainer/HBoxContainer2/LineEdit" to="." method="_xin_submitted"]
-[connection signal="focus_exited" from="Control/VBoxContainer/HBoxContainer2/LineEdit2" to="." method="_on_yin_edit_focus_exited"]
-[connection signal="text_submitted" from="Control/VBoxContainer/HBoxContainer2/LineEdit2" to="." method="_yin_submitted"]
+[connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer/play" to="." method="_on_play_pressed"]
+[connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer/stop" to="." method="_on_stop_pressed"]
+[connection signal="drag_ended" from="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer/HSlider" to="." method="_on_h_slider_drag_ended"]
+[connection signal="drag_started" from="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer/HSlider" to="." method="_on_h_slider_drag_started"]
+[connection signal="value_changed" from="Control/VBoxContainer/HBoxContainer/VBoxContainer/HBoxContainer/HSlider" to="." method="_on_h_slider_value_changed"]
+[connection signal="focus_exited" from="Control/VBoxContainer/HBoxContainer/VBoxContainer2/HBoxContainer2/LineEdit" to="." method="_on_velocity_edit_focus_exited"]
+[connection signal="text_submitted" from="Control/VBoxContainer/HBoxContainer/VBoxContainer2/HBoxContainer2/LineEdit" to="." method="_v0_submitted"]
+[connection signal="focus_exited" from="Control/VBoxContainer/HBoxContainer/VBoxContainer2/HBoxContainer/LineEdit" to="." method="_on_xin_edit_focus_exited"]
+[connection signal="text_submitted" from="Control/VBoxContainer/HBoxContainer/VBoxContainer2/HBoxContainer/LineEdit" to="." method="_xin_submitted"]
+[connection signal="focus_exited" from="Control/VBoxContainer/HBoxContainer/VBoxContainer3/HBoxContainer/LineEdit" to="." method="_on_angle_edit_focus_exited"]
+[connection signal="text_submitted" from="Control/VBoxContainer/HBoxContainer/VBoxContainer3/HBoxContainer/LineEdit" to="." method="_a0_submitted"]
+[connection signal="focus_exited" from="Control/VBoxContainer/HBoxContainer/VBoxContainer3/HBoxContainer2/LineEdit" to="." method="_on_yin_edit_focus_exited"]
+[connection signal="text_submitted" from="Control/VBoxContainer/HBoxContainer/VBoxContainer3/HBoxContainer2/LineEdit" to="." method="_yin_submitted"]
